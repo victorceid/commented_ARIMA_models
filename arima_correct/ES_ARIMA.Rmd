@@ -1,0 +1,218 @@
+---
+title: "ES_ARIMA MODELS"
+author: "Victor Felix"
+date: "2024-05-31"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+!!!!!!!!!!!!!!!!!!!!
+LOADING THE PACKAGES
+!!!!!!!!!!!!!!!!!!!!
+```{r}
+library("tidyr")
+library("MMWRweek")
+library("data.table")
+library("caret")
+library("purrr")
+library("dplyr")
+library("tseries")
+library("gtools")
+library("forecast")
+library("scoringutils")
+library("covidHubUtils")
+library("parallel")
+library("future")#https://cran.r-project.org/web/packages/future/vignettes/future-4-issues.html
+library("listenv")
+library("epitools")
+```
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+LOADING DATASET AND FUNCTIONS 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+```{r}
+#############################################
+#       LOADING AND CLEANING THE DATASET      
+#############################################
+source("ES_ARIMA.R", local = TRUE, chdir = TRUE)
+
+my_data = read.csv("ILINet.csv")
+state_codes<-read.csv("State_Codes.csv")
+
+# Organize the ILI data into a list of states 
+# Transform EPIWEEKS to dates 
+# Get only states in the contiguous U.S.
+
+list_of_states <- combining_states_data(my_data, state_codes) %>%
+  setNames(state_codes$location_name)%>%
+  .[c(-48,-49,-50,-51,-52,-53)]
+
+```
+
+EXAMPLE FOR A SINGLE STATE
+
+```{r setup, include=FALSE}
+# A list with a single state from the list_of_states
+
+one_state<-list(list_of_states[['Colorado']])
+
+example_single_state3 <- mclapply(one_state, ES_ARIMA, auto=TRUE, n_weeks_ahead=1, mc.cores=4)
+
+```
+
+AUTO ARIMA WEEK1
+
+```{r}
+AUTO_ARIMA_WEEK1_list <- mclapply(list_of_states, ES_ARIMA, auto=TRUE, n_weeks_ahead=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_ARIMA_WEEK1 <- bind_rows(AUTO_ARIMA_WEEK1_list, .id = "State")
+```
+
+AUTO ARIMA WEEK2
+
+```{r}
+
+AUTO_ARIMA_WEEK2_list <- mclapply(list_of_states , ES_ARIMA, auto=TRUE, n_weeks_ahead=2, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_ARIMA_WEEK2 <- bind_rows(AUTO_ARIMA_WEEK2_list, .id = "State")
+
+```
+
+AUTO ARIMA WEEK3
+
+```{r}
+
+AUTO_ARIMA_WEEK3_list <- mclapply(list_of_states , ES_ARIMA, auto=TRUE, n_weeks_ahead=3, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_ARIMA_WEEK3 <- bind_rows(AUTO_ARIMA_WEEK3_list, .id = "State")
+
+```
+
+AUTO ARIMA WEEK4
+
+```{r}
+
+AUTO_ARIMA_WEEK4_list <- mclapply(list_of_states, ES_ARIMA, auto=TRUE, n_weeks_ahead=4 ,mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_ARIMA_WEEK4 <- bind_rows(AUTO_ARIMA_WEEK4_list, .id = "State")
+
+```
+
+```{r}
+save.image("ARIMA_MODELS_correct.Rdata")
+```
+
+ES27 ARIMA WEEK1
+
+```{r}
+
+ES27_ARIMA_WEEK1_list <- mclapply(list_of_states, ES_ARIMA, ES27=TRUE, n_weeks_ahead=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_ARIMA_WEEK1 <- bind_rows(ES27_ARIMA_WEEK1_list, .id = "State")
+
+```
+
+ES27 ARIMA WEEK2
+
+```{r}
+
+ES27_ARIMA_WEEK2_list <- mclapply(list_of_states, ES_ARIMA, ES27=TRUE, n_weeks_ahead=2, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_ARIMA_WEEK2 <- bind_rows(ES27_ARIMA_WEEK2_list, .id = "State")
+
+```
+
+ES27 ARIMA WEEK3
+
+```{r}
+
+ES27_ARIMA_WEEK3_list <- mclapply(list_of_states, ES_ARIMA, ES27=TRUE, n_weeks_ahead=3, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_ARIMA_WEEK3 <- bind_rows(ES27_ARIMA_WEEK3_list, .id = "State")
+
+```
+
+ES27 ARIMA WEEK4
+
+```{r}
+
+ES27_ARIMA_WEEK4_list <- mclapply(list_of_states, ES_ARIMA, ES27=TRUE, n_weeks_ahead=4 ,mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_ARIMA_WEEK4 <- bind_rows(ES27_ARIMA_WEEK4_list, .id = "State")
+
+```
+
+```{r}
+save.image("ARIMA_MODELS_correct.Rdata")
+```
+
+ES64 ARIMA WEEK1
+
+```{r}
+
+ES64_ARIMA_WEEK1_list <- mclapply(list_of_states, ES_ARIMA, ES64=TRUE, n_weeks_ahead=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_ARIMA_WEEK1 <- bind_rows(ES64_ARIMA_WEEK1_list, .id = "State")
+
+```
+
+ES64 ARIMA WEEK2
+
+```{r}
+
+ES64_ARIMA_WEEK2_list <- mclapply(list_of_states, ES_ARIMA, ES64=TRUE, n_weeks_ahead=2, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_ARIMA_WEEK2 <- bind_rows(ES64_ARIMA_WEEK2_list, .id = "State")
+
+```
+
+ES64 ARIMA WEEK3
+
+```{r}
+
+ES64_ARIMA_WEEK3_list <- mclapply(list_of_states, ES_ARIMA, ES64=TRUE, n_weeks_ahead=3, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_ARIMA_WEEK3 <- bind_rows(ES64_ARIMA_WEEK3_list, .id = "State")
+
+```
+
+ES64 ARIMA WEEK4
+
+```{r}
+
+ES64_ARIMA_WEEK4_list <- mclapply(list_of_states, ES_ARIMA, ES64=TRUE, n_weeks_ahead=4 ,mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_ARIMA_WEEK4 <- bind_rows(ES64_ARIMA_WEEK4_list, .id = "State")
+
+```
+
+```{r}
+save.image("ARIMA_MODELS_correct.Rdata")
+```
