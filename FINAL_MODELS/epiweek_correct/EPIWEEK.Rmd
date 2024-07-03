@@ -1,0 +1,219 @@
+---
+title: "EPIWEEK MODELS"
+author: "Victor Felix"
+date: "2024-01-29"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+!!!!!!!!!!!!!!!!!!!!
+LOADING THE PACKAGES
+!!!!!!!!!!!!!!!!!!!!
+```{r}
+library("tidyr")
+library("MMWRweek")
+library("data.table")
+library("caret")
+library("purrr")
+library("dplyr")
+library("tseries")
+library("gtools")
+library("forecast")
+library("scoringutils")
+library("covidHubUtils")
+library("parallel")
+library("future")#https://cran.r-project.org/web/packages/future/vignettes/future-4-issues.html
+library("listenv")
+library("epitools")
+```
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+LOADING DATASET AND FUNCTIONS 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+```{r}
+#############################################
+#       LOADING AND CLEANING THE DATASET      
+#############################################
+source("ES_EPIWEEK.r", local = TRUE, chdir = TRUE)
+
+my_data = read.csv("ILINet.csv")
+state_codes<-read.csv("State_Codes.csv")
+
+# Organize the ILI data into a list of states 
+# Transform EPIWEEKS to dates 
+# Get only states in the contiguous U.S.
+
+list_of_states <- combining_states_data(my_data, state_codes) %>%
+  setNames(state_codes$location_name)%>%
+  .[c(-48,-49,-50,-51,-52,-53)]
+```
+
+EXAMPLE FOR A SINGLE STATE
+
+```{r setup, include=FALSE}
+# A list with a single state from the states_data
+one_state<-list(list_of_states[['Alabama']])
+
+single_state_example <- mclapply(one_state, ES_EPIWEEK, auto=TRUE, n_weeks_ahead=1, week_lag=1, mc.cores=1)
+```
+
+AUTO EPIWEEK WEEK1
+
+```{r}
+# RUN MODEL 
+AUTO_EPIWEEK_WEEK1_list <- mclapply(list_of_states, ES_EPIWEEK, auto=TRUE, n_weeks_ahead=1,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+AUTO_EPIWEEK_WEEK1 <- bind_rows(AUTO_EPIWEEK_WEEK1_list, .id = "State")
+
+# SAVE TO CORRECT FOLDER
+#write.csv(EPIWEEK/AUTO/AUTO_EPIWEEK_WEEK1, file = "AUTO_EPIWEEK_WEEK1.csv", row.names = TRUE)
+```
+
+AUTO EPIWEEK WEEK2
+
+```{r}
+# RUN MODEL 
+AUTO_EPIWEEK_WEEK2_list <- mclapply(list_of_states, ES_EPIWEEK, auto=TRUE, n_weeks_ahead=2,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+AUTO_EPIWEEK_WEEK2 <- bind_rows(AUTO_EPIWEEK_WEEK2_list, .id = "State")
+
+```
+
+AUTO EPIWEEK WEEK3
+
+```{r}
+
+AUTO_EPIWEEK_WEEK3_list <- mclapply(list_of_states, ES_EPIWEEK, auto=TRUE, n_weeks_ahead=3,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_EPIWEEK_WEEK3 <- bind_rows(AUTO_EPIWEEK_WEEK3_list, .id = "State")
+
+```
+
+AUTO EPIWEEK WEEK4
+
+```{r}
+
+AUTO_EPIWEEK_WEEK4_list <- mclapply(list_of_states, ES_EPIWEEK, auto=TRUE, n_weeks_ahead=4,lag_week=1 ,mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_EPIWEEK_WEEK4 <- bind_rows(AUTO_EPIWEEK_WEEK4_list, .id = "State")
+
+```
+
+```{r}
+save.image("EPIWEEK_MODELS_correct.Rdata")
+```
+
+ES27 EPIWEEK WEEK1
+
+```{r}
+
+ES27_EPIWEEK_WEEK1_list <- mclapply(list_of_states, ES_EPIWEEK, ES27=TRUE, n_weeks_ahead=1,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_EPIWEEK_WEEK1 <- bind_rows(ES27_EPIWEEK_WEEK1_list, .id = "State")
+
+```
+
+ES27 EPIWEEK WEEK2
+
+```{r}
+
+ES27_EPIWEEK_WEEK2_list <- mclapply(list_of_states, ES_EPIWEEK, ES27=TRUE, n_weeks_ahead=2,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_EPIWEEK_WEEK2 <- bind_rows(ES27_EPIWEEK_WEEK2_list, .id = "State")
+
+```
+
+ES27 EPIWEEK WEEK3
+
+```{r}
+
+ES27_EPIWEEK_WEEK3_list <- mclapply(list_of_states, ES_EPIWEEK, ES27=TRUE, n_weeks_ahead=3,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_EPIWEEK_WEEK3 <- bind_rows(ES27_EPIWEEK_WEEK3_list, .id = "State")
+
+```
+
+ES27 EPIWEEK WEEK4
+
+```{r}
+
+ES27_EPIWEEK_WEEK4_list <- mclapply(list_of_states, ES_EPIWEEK, ES27=TRUE, n_weeks_ahead=4,lag_week=1 ,mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_EPIWEEK_WEEK4 <- bind_rows(ES27_EPIWEEK_WEEK4_list, .id = "State")
+
+```
+
+```{r}
+save.image("EPIWEEK_MODELS_correct.Rdata")
+```
+
+ES64 EPIWEEK WEEK1
+
+```{r}
+
+ES64_EPIWEEK_WEEK1_list <- mclapply(list_of_states, ES_EPIWEEK, ES64=TRUE, n_weeks_ahead=1,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_EPIWEEK_WEEK1 <- bind_rows(ES64_EPIWEEK_WEEK1_list, .id = "State")
+
+```
+
+ES64 EPIWEEK WEEK2
+
+```{r}
+
+ES64_EPIWEEK_WEEK2_list <- mclapply(list_of_states, ES_EPIWEEK, ES64=TRUE, n_weeks_ahead=2,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_EPIWEEK_WEEK2 <- bind_rows(ES64_EPIWEEK_WEEK2_list, .id = "State")
+
+```
+
+ES64 EPIWEEK WEEK3
+
+```{r}
+
+ES64_EPIWEEK_WEEK3_list <- mclapply(list_of_states, ES_EPIWEEK, ES64=TRUE, n_weeks_ahead=3,lag_week=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_EPIWEEK_WEEK3 <- bind_rows(ES64_EPIWEEK_WEEK3_list, .id = "State")
+
+```
+
+ES64 EPIWEEK WEEK4
+
+```{r}
+
+ES64_EPIWEEK_WEEK4_list <- mclapply(list_of_states, ES_EPIWEEK, ES64=TRUE, n_weeks_ahead=4,lag_week=1,mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_EPIWEEK_WEEK4 <- bind_rows(ES64_EPIWEEK_WEEK4_list, .id = "State")
+
+```
+
+```{r}
+save.image("EPIWEEK_MODELS_correct.Rdata")
+```

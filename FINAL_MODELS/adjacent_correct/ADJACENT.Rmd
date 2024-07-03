@@ -1,0 +1,244 @@
+---
+title: "ADJACENT STATES ARIMAX MODEL"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+!!!!!!!!!!!!!!!!!!!
+LOADING THE DATASET
+!!!!!!!!!!!!!!!!!!!
+```{r load-packages, echo=TRUE, results='hide', message=FALSE}
+library("tidyr")
+library("feasts")
+library("MMWRweek")
+library("data.table")
+library("caret")
+library("purrr")
+library("skimr")
+library("ggcorrplot")
+library("DataExplorer")
+#library("cdcfluview")
+library("dplyr")
+library("tseries")
+library("forecast")
+library("tsibble")
+library("berryFunctions")
+library("scoringutils")
+library("covidHubUtils")
+library("gtools")
+library("parallel")
+library("doParallel")
+library("foreach")
+library("future")#https://cran.r-project.org/web/packages/future/vignettes/future-4-issues.html
+library("listenv")
+library("lubridate")
+library("corrplot")
+library("sf")
+library("ggrepel")
+library("Metrics")
+library("epitools")
+```
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+LOADING DATASET AND FUNCTION 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+```{r, echo=TRUE, message=FALSE}
+###########################################
+#       LOADING AND CLEANING THE DATASET  #        
+###########################################
+
+# Loads the ADJACENT states models
+source("ES_ADJACENT.R", local = TRUE, chdir = TRUE)
+
+# Loads the ILI dataset
+my_data = read.csv("ILINet.csv")
+
+# Loads the states names and codes
+state_codes<-read.csv("State_Codes.csv")
+
+#Combines the ILI data into separate lists each one with its state name and removes the states that are not in the contiguous U.S.
+list_of_states<-combining_states_data(my_data,state_codes) %>% 
+  setNames(state_codes$location_name)%>%                    
+  .[c(-48,-49,-50,-51,-52,-53)]                             
+                                                            
+```
+Function Description
+
+```{r, include=FALSE}
+##############################################################################
+# AUTO ARIMAX ADJACENT STATES model
+# With the mclapply we use a list of states and read one at the time
+# We have an auto arimax, and ensembles of 27 and 64 models
+# You can set: auto =TRUE or ES27=TRUE or ES64=TRUE to chose one of them
+# my_n_ahead is the number of weeks ahead you want to forecast
+# in this case states_data is needed for calculating mean cases by each state
+# mc.cores is the number of cores you want to use to run the model
+
+```
+
+EXAMPLE FOR A SINGLE STATE
+
+```{r, include=FALSE}
+# A list with a single state from the states_data
+source("ES_ADJACENT.R", local = TRUE, chdir = TRUE)
+
+one_state<-list(list_of_states[['Alabama']])
+
+AUTO_example <- mclapply(one_state, ES_ADJACENT, auto=TRUE, n_weeks_ahead=1,list_of_states=list_of_states, week_lag=1, mc.cores=1)
+
+ES27_example <- mclapply(one_state, ES_ADJACENT, ES27=TRUE, n_weeks_ahead=1,list_of_states=list_of_states, week_lag=1, mc.cores=1)
+
+ES64_example <- mclapply(one_state, ES_ADJACENT, ES64=TRUE, n_weeks_ahead=1,list_of_states=list_of_states, week_lag=1, mc.cores=1)
+
+```
+
+AUTO ADJACENT WEEK1 - ALL STATES
+
+```{r}
+
+AUTO_ADJACENT_WEEK1_list <- mclapply(list_of_states, ES_ADJACENT, auto=TRUE, n_weeks_ahead=1,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+AUTO_ADJACENT_WEEK1 <- bind_rows(AUTO_ADJACENT_WEEK1_list, .id = "State")
+
+```
+
+AUTO ADJACENT WEEK2 - ALL STATES
+
+```{r}
+# RUN MODEL 
+AUTO_ADJACENT_WEEK2_list <- mclapply(list_of_states, ES_ADJACENT, auto=TRUE, n_weeks_ahead=2,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+AUTO_ADJACENT_WEEK2 <- bind_rows(AUTO_ADJACENT_WEEK2_list, .id = "State")
+```
+
+AUTO ADJACENT WEEK3 - ALL STATES
+
+```{r}
+
+AUTO_ADJACENT_WEEK3_list <- mclapply(list_of_states, ES_ADJACENT, auto=TRUE, n_weeks_ahead=3,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_ADJACENT_WEEK3 <- bind_rows(AUTO_ADJACENT_WEEK3_list, .id = "State")
+```
+
+AUTO ADJACENT WEEK4 - ALL STATES
+
+```{r}
+
+AUTO_ADJACENT_WEEK4_list <- mclapply(list_of_states, ES_ADJACENT, auto=TRUE, n_weeks_ahead=4,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_ADJACENT_WEEK4 <- bind_rows(AUTO_ADJACENT_WEEK4_list, .id = "State")
+```
+
+```{r}
+save.image("ADJACENT_MODELS_correct.Rdata")
+```
+
+ES27 ADJACENT WEEK1 - ALL STATES
+
+```{r}
+
+ES27_ADJACENT_WEEK1_list <- mclapply(list_of_states, ES_ADJACENT, ES27=TRUE, n_weeks_ahead=1,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+ES27_ADJACENT_WEEK1 <- bind_rows(ES27_ADJACENT_WEEK1_list, .id = "State")
+```
+
+ES27 ADJACENT WEEK2 - ALL STATES
+
+```{r}
+
+ES27_ADJACENT_WEEK2_list <- mclapply(list_of_states, ES_ADJACENT, ES27=TRUE, n_weeks_ahead=2,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+ES27_ADJACENT_WEEK2 <- bind_rows(ES27_ADJACENT_WEEK2_list, .id = "State")
+```
+
+ES27 ADJACENT WEEK3 - ALL STATES
+
+```{r}
+
+ES27_ADJACENT_WEEK3_list <- mclapply(list_of_states, ES_ADJACENT, ES27=TRUE, n_weeks_ahead=3,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+ES27_ADJACENT_WEEK3 <- bind_rows(ES27_ADJACENT_WEEK3_list, .id = "State")
+```
+
+ES27 ADJACENT WEEK4 - ALL STATES
+
+```{r}
+
+ES27_ADJACENT_WEEK4_list <- mclapply(list_of_states, ES_ADJACENT, ES27=TRUE, n_weeks_ahead=4,list_of_states=list_of_states,week_lag=1, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+ES27_ADJACENT_WEEK4 <- bind_rows(ES27_ADJACENT_WEEK4_list, .id = "State")
+```
+
+```{r}
+save.image("ADJACENT_MODELS_correct.Rdata")
+```
+
+ES64 ADJACENT WEEK1 - ALL STATES
+
+```{r}
+
+ES64_ADJACENT_WEEK1_list <- mclapply(list_of_states, ES_ADJACENT, ES64=TRUE, n_weeks_ahead=1,list_of_states=list_of_states, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# FINAL DATAFRAME
+ES64_ADJACENT_WEEK1 <- bind_rows(ES64_ADJACENT_WEEK1_list, .id = "State")
+```
+
+ES64 ADJACENT WEEK2 - ALL STATES
+
+```{r}
+
+ES64_ADJACENT_WEEK2_list <- mclapply(list_of_states, ES_ADJACENT, ES64=TRUE, n_weeks_ahead=2,list_of_states=list_of_states, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_ADJACENT_WEEK2 <- bind_rows(ES64_ADJACENT_WEEK2_list, .id = "State")
+
+```
+
+ES64 ADJACENT WEEK3 - ALL STATES
+
+```{r}
+
+ES64_ADJACENT_WEEK3_list <- mclapply(list_of_states, ES_ADJACENT, ES64=TRUE, n_weeks_ahead=3,list_of_states=list_of_states, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_ADJACENT_WEEK3 <- bind_rows(ES64_ADJACENT_WEEK3_list, .id = "State")
+
+```
+
+ES64 ADJACENT WEEK4 - ALL STATES
+
+```{r}
+
+ES64_ADJACENT_WEEK4_list <- mclapply(list_of_states, ES_ADJACENT, ES64=TRUE, n_weeks_ahead=4,list_of_states=list_of_states, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_ADJACENT_WEEK4 <- bind_rows(ES64_ADJACENT_WEEK4_list, .id = "State")
+
+```
+
+```{r}
+save.image("ADJACENT_MODELS_correct.Rdata")
+```

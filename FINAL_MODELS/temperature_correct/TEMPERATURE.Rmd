@@ -1,0 +1,193 @@
+---
+title: "TEMPERATURE MODELS"
+author: "Victor Felix"
+date: "2024-01-29"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+!!!!!!!!!!!!!!!!!!!!
+LOADING THE PACKAGES
+!!!!!!!!!!!!!!!!!!!!
+```{r}
+library("tidyr")
+library("MMWRweek")
+library("data.table")
+library("caret")
+library("purrr")
+library("dplyr")
+library("tseries")
+library("gtools")
+library("forecast")
+library("scoringutils")
+library("covidHubUtils")
+library("parallel")
+library("future")#https://cran.r-project.org/web/packages/future/vignettes/future-4-issues.html
+library("listenv")
+library("epitools")
+```
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+LOADING DATASET AND FUNCTIONS 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+```{r}
+##########################################
+#       LOADING AND CLEANING THE DATASET #      
+##########################################
+source("ES_TEMPERATURE.r", local = TRUE, chdir = TRUE)
+
+temperature_data = read.csv("temperature_data.csv")
+temperature_data <- temperature_data %>% select(-Dates)
+
+my_data = read.csv("ILINet.csv")
+state_codes<-read.csv("State_Codes.csv")
+
+list_of_states <- combining_states_data(my_data, state_codes) %>%
+  setNames(state_codes$location_name)%>%
+  .[c(-48,-49,-50,-51,-52,-53)]
+```
+
+EXAMPLE FOR A SINGLE STATE
+
+```{r}
+one_state<-list(list_of_states[['Colorado']])
+
+single_state_example <- mclapply(one_state, ES_TEMPERATURE, auto=TRUE, n_weeks_ahead=1,temperature_data=temperature_data, week_lag=1, mc.cores=1)
+```
+
+AUTO TEMPERATURE WEEK1
+
+```{r}
+AUTO_TEMPERATURE_WEEK1_list <- mclapply(list_of_states, ES_TEMPERATURE, auto=TRUE, n_weeks_ahead=1,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_TEMPERATURE_WEEK1 <- bind_rows(AUTO_TEMPERATURE_WEEK1_list, .id = "State")
+```
+
+AUTO TEMPERATURE WEEK2
+
+```{r}
+AUTO_TEMPERATURE_WEEK2_list <- mclapply(list_of_states, ES_TEMPERATURE, auto=TRUE, n_weeks_ahead=2,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_TEMPERATURE_WEEK2 <- bind_rows(AUTO_TEMPERATURE_WEEK2_list, .id = "State")
+```
+
+AUTO TEMPERATURE WEEK3
+
+```{r}
+AUTO_TEMPERATURE_WEEK3_list <- mclapply(list_of_states, ES_TEMPERATURE, auto=TRUE, n_weeks_ahead=3,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_TEMPERATURE_WEEK3 <- bind_rows(AUTO_TEMPERATURE_WEEK3_list, .id = "State")
+```
+
+AUTO TEMPERATURE WEEK4
+
+```{r}
+AUTO_TEMPERATURE_WEEK4_list <- mclapply(list_of_states, ES_TEMPERATURE, auto=TRUE, n_weeks_ahead=4,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+AUTO_TEMPERATURE_WEEK4 <- bind_rows(AUTO_TEMPERATURE_WEEK4_list, .id = "State")
+```
+
+```{r}
+save.image("TEMPERATURE_MODELS_correct.Rdata")
+```
+
+ES27 TEMPERATURE WEEK1
+
+```{r}
+ES27_TEMPERATURE_WEEK1_list <- mclapply(list_of_states, ES_TEMPERATURE, ES27=TRUE, n_weeks_ahead=1,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_TEMPERATURE_WEEK1 <- bind_rows(ES27_TEMPERATURE_WEEK1_list, .id = "State")
+```
+
+ES27 TEMPERATURE WEEK2
+
+```{r}
+ES27_TEMPERATURE_WEEK2_list <- mclapply(list_of_states, ES_TEMPERATURE, ES27=TRUE, n_weeks_ahead=2,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_TEMPERATURE_WEEK2 <- bind_rows(ES27_TEMPERATURE_WEEK2_list, .id = "State")
+```
+
+ES27 TEMPERATURE WEEK3
+
+```{r}
+ES27_TEMPERATURE_WEEK3_list <- mclapply(list_of_states, ES_TEMPERATURE, ES27=TRUE, n_weeks_ahead=3,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_TEMPERATURE_WEEK3 <- bind_rows(ES27_TEMPERATURE_WEEK3_list, .id = "State")
+```
+
+ES27 TEMPERATURE WEEK4
+
+```{r}
+ES27_TEMPERATURE_WEEK4_list <- mclapply(list_of_states, ES_TEMPERATURE, ES27=TRUE, n_weeks_ahead=4,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES27_TEMPERATURE_WEEK4 <- bind_rows(ES27_TEMPERATURE_WEEK4_list, .id = "State")
+```
+
+```{r}
+save.image("TEMPERATURE_MODELS_correct.Rdata")
+```
+
+ES64 TEMPERATURE WEEK1
+
+```{r}
+ES64_TEMPERATURE_WEEK1_list <- mclapply(list_of_states, ES_TEMPERATURE, ES64=TRUE, n_weeks_ahead=1,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_TEMPERATURE_WEEK1 <- bind_rows(ES64_TEMPERATURE_WEEK1_list, .id = "State")
+```
+
+ES64 TEMPERATURE WEEK2
+
+```{r}
+ES64_TEMPERATURE_WEEK2_list <- mclapply(list_of_states, ES_TEMPERATURE, ES64=TRUE, n_weeks_ahead=2,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_TEMPERATURE_WEEK2 <- bind_rows(ES64_TEMPERATURE_WEEK2_list, .id = "State")
+```
+
+ES64 TEMPERATURE WEEK3
+
+```{r}
+ES64_TEMPERATURE_WEEK3_list <- mclapply(list_of_states, ES_TEMPERATURE, ES64=TRUE, n_weeks_ahead=3,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_TEMPERATURE_WEEK3 <- bind_rows(ES64_TEMPERATURE_WEEK3_list, .id = "State")
+```
+
+ES64 TEMPERATURE WEEK4
+
+```{r}
+ES64_TEMPERATURE_WEEK4_list <- mclapply(list_of_states, ES_TEMPERATURE, ES64=TRUE, n_weeks_ahead=4,week_lag=1,temperature_data=temperature_data, mc.cores=4)%>%
+  setNames(names(list_of_states))
+
+# Combine the list of data frames into a single data frame with names as a column
+ES64_TEMPERATURE_WEEK4 <- bind_rows(ES64_TEMPERATURE_WEEK4_list, .id = "State")
+```
+
+```{r}
+save.image("TEMPERATURE_MODELS_correct.Rdata")
+```
+
+
